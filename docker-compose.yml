@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  api:
+    image: fast_api
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "80:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+      - model
+    volumes:
+      - ./api:/src/api:delegated
+
+  redis:
+    image: redis:6.2.6
+    container_name: redis
+
+  model:
+    image: ml_service
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    volumes:
+      - ./model:/app:delegated
+
+  frontend:
+    image: frontend
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app:delegated
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
